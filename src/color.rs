@@ -9,15 +9,15 @@ impl RGB for u32 {
         let (ar, ag, ab) = a.to_rgb();
         let (br, bg, bb) = b.to_rgb();
         Self::from_rgb(
-            &(br * t + ar * (1.0 - t)),
-            &(bg * t + ag * (1.0 - t)),
-            &(bb * t + ab * (1.0 - t)),
+            &br.mul_add(t, ar * (1.0 - t)),
+            &bg.mul_add(t, ag * (1.0 - t)),
+            &bb.mul_add(t, ab * (1.0 - t)),
         )
     }
     fn from_rgb(r: &f32, g: &f32, b: &f32) -> Self {
-        let r = (r * 255.0).round() as u32;
-        let g = (g * 255.0).round() as u32;
-        let b = (b * 255.0).round() as u32;
+        let r = (r * 255.0).round() as Self;
+        let g = (g * 255.0).round() as Self;
+        let b = (b * 255.0).round() as Self;
         (r << 16) | (g << 8) | b
     }
     fn to_rgb(&self) -> (f32, f32, f32) {

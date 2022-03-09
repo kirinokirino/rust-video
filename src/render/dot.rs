@@ -3,7 +3,7 @@ use crate::framebuffer::PPM;
 
 fn smoothstep(e0: f32, e1: f32, x: f32) -> f32 {
     let x = ((x - e0) / (e1 - e0)).clamp(0.0, 1.0);
-    x.powf(2.0) * (3.0 - 2.0 * x)
+    x.powi(2) * (3.0 - 2.0 * x)
 }
 
 pub fn dot(
@@ -26,12 +26,12 @@ pub fn dot(
         let dy = py as f32 - y;
         for px in minx..maxx {
             let dx = px as f32 - x;
-            let d = (dy * dy + dx * dx).sqrt();
+            let d = dy.hypot(dx);
             let a = smoothstep(max_radius, min_radius, d);
             let (br, bg, bb) = buf.ppm_get(px, py).to_rgb();
-            let r = a * fr + (1.0 - a) * br;
-            let g = a * fg + (1.0 - a) * bg;
-            let b = a * fb + (1.0 - a) * bb;
+            let r = a.mul_add(fr, (1.0 - a) * br);
+            let g = a.mul_add(fg, (1.0 - a) * bg);
+            let b = a.mul_add(fb, (1.0 - a) * bb);
             buf.ppm_set(px, py, Color::from_rgb(&r, &g, &b));
         }
     }

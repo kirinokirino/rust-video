@@ -57,14 +57,14 @@ fn main() {
             let frame = &mut frame as &mut dyn PPM;
             frame.fill(w as usize, h as usize, Color::from_rgb(&1.0, &1.0, &1.0));
             frame.dot(
-                hw + (time / 50.0).sin() * hw,
-                hh + (time / 50.0).cos() * hh,
+                (time / 50.0).sin().mul_add(hw, hw),
+                (time / 50.0).cos().mul_add(hh, hh),
                 0,
                 10.0,
                 Some(10.0),
             );
-            let x = hw + (time / 100.0).cos() * hw;
-            let y = hh + (time / 100.0).sin() * hh;
+            let x = (time / 100.0).cos().mul_add(hw, hw);
+            let y = (time / 100.0).sin().mul_add(hh, hh);
             frame.line(
                 x,
                 y,

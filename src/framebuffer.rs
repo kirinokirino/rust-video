@@ -18,9 +18,9 @@ impl PPM for FrameBuffer {
         if i * 3 + 2 > self.buf.len() {
             return 0;
         }
-        let r = self.buf[i * 3] as u32;
-        let g = self.buf[i * 3 + 1] as u32;
-        let b = self.buf[i * 3 + 2] as u32;
+        let r = u32::from(self.buf[i * 3]);
+        let g = u32::from(self.buf[i * 3 + 1]);
+        let b = u32::from(self.buf[i * 3 + 2]);
         (r << 16) | (g << 8) | b
     }
     fn ppm_get(&self, x: u32, y: u32) -> Color {

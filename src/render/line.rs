@@ -24,7 +24,7 @@ pub fn line(buf: &mut (impl PPM + ?Sized), x0: f32, y0: f32, x1: f32, y1: f32, c
     let grad = if dx == 0.0 { 1.0 } else { dy / dx };
 
     let xend = x0.round();
-    let yend = y0 + grad * (xend - x0);
+    let yend = grad.mul_add(xend - x0, y0);
     let xgap = 1.0 - (x0 + 0.5).fract();
     let xpxl1 = xend;
     let ypxl1 = yend.floor();
@@ -48,7 +48,7 @@ pub fn line(buf: &mut (impl PPM + ?Sized), x0: f32, y0: f32, x1: f32, y1: f32, c
     let mut intery = yend + grad;
 
     let xend = x1.round();
-    let yend = y1 + grad * (xend - x1);
+    let yend = grad.mul_add(xend - x1, y1);
     let xgap = 1.0 - (x1 + 0.5).fract();
     let xpxl2 = xend;
     let ypxl2 = yend.floor();
