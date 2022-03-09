@@ -75,6 +75,5 @@ fn main() {
         }
         frame.ppm_write(&mut out);
         time += 1.0;
-        coz::progress!("main loop");
     }
 }

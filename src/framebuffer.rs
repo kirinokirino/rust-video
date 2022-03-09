@@ -53,7 +53,6 @@ impl PPM for FrameBuffer {
 
 impl WritePPM for FrameBuffer {
     fn ppm_write<P: Write>(&self, b: &mut P) {
-        coz::scope!("ppm_write");
         writeln!(b, "P6\n{} {}\n255", self.w, self.h).unwrap();
         let bytes: Vec<u8> = self.buf.iter().flat_map(|p| p.to_le_bytes()).collect();
         b.write_all(&bytes).unwrap();
