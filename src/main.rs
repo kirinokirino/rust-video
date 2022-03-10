@@ -39,12 +39,12 @@ mod render;
 
 use std::io::stdout;
 
-use color::{Color, RGB};
+use color::Color;
 use framebuffer::{FrameBuffer, WritePPM, PPM};
 use render::Renderable;
 
 fn main() {
-    let mut frame = FrameBuffer::new(1920, 1080);
+    let mut frame = FrameBuffer::new(1440, 900);
     let mut out = stdout();
     let mut time: f32 = 0.0;
     loop {
@@ -55,11 +55,11 @@ fn main() {
             let hh = h as f32 / 2.0;
 
             let frame = &mut frame as &mut dyn PPM;
-            frame.fill(w as usize, h as usize, Color::from_rgb(&1.0, &1.0, &1.0));
+            frame.fill(w as usize, h as usize, Color::new(1.0, 1.0, 1.0, 1.0));
             frame.dot(
                 (time / 50.0).sin().mul_add(hw, hw),
                 (time / 50.0).cos().mul_add(hh, hh),
-                0,
+                Color::new(0.0, 0.0, 0.0, 1.0),
                 10.0,
                 Some(10.0),
             );
@@ -70,7 +70,7 @@ fn main() {
                 y,
                 w as f32 - x,
                 h as f32 - y,
-                Color::from_rgb(&0.9, &0.15, &0.2),
+                Color::new(0.9, 0.15, 0.2, 1.0),
             );
         }
         frame.ppm_write(&mut out);

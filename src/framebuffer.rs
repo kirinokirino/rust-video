@@ -1,4 +1,4 @@
-use crate::color::{Color, RGB};
+use crate::color::Color;
 use std::io::Write;
 
 pub trait PPM {
@@ -16,16 +16,17 @@ pub trait WritePPM {
 impl PPM for FrameBuffer {
     fn ppm_get_i(&self, i: usize) -> Color {
         if i * 3 + 2 > self.buf.len() {
-            return 0;
+            return Color::new(1.0, 1.0, 1.0, 0.0);
         }
-        let r = u32::from(self.buf[i * 3]);
-        let g = u32::from(self.buf[i * 3 + 1]);
-        let b = u32::from(self.buf[i * 3 + 2]);
-        (r << 16) | (g << 8) | b
+        let r = f32::from(self.buf[i * 3]) / 255.0;
+        let g = f32::from(self.buf[i * 3 + 1]) / 255.0;
+        let b = f32::from(self.buf[i * 3 + 2]) / 255.0;
+        Color::new(r, g, b, 1.0)
     }
+
     fn ppm_get(&self, x: u32, y: u32) -> Color {
         if x >= self.w || y >= self.h {
-            return 0;
+            return Color::new(1.0, 1.0, 1.0, 0.0);
         }
         self.ppm_get_i((y * self.w + x) as usize)
     }
@@ -34,10 +35,11 @@ impl PPM for FrameBuffer {
         if i * 3 + 2 > self.buf.len() {
             return;
         }
-        self.buf[i * 3] = (c >> 16) as u8;
-        self.buf[i * 3 + 1] = (c >> 8) as u8;
-        self.buf[i * 3 + 2] = (c >> 0) as u8;
+        self.buf[i * 3] = (c.red * 255.0) as u8;
+        self.buf[i * 3 + 1] = (c.green * 255.0) as u8;
+        self.buf[i * 3 + 2] = (c.blue * 255.0) as u8;
     }
+
     fn ppm_set(&mut self, x: u32, y: u32, c: Color) {
         if x >= self.w || y >= self.h {
             return;
