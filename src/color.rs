@@ -1,5 +1,7 @@
 use std::default::Default;
 
+use crate::common::lerp;
+
 #[derive(Clone, Copy, Debug)]
 pub struct Color {
     pub red: f32,
@@ -18,6 +20,11 @@ impl Color {
         }
     }
 
+    #[allow(
+        clippy::as_conversions,
+        clippy::cast_sign_loss,
+        clippy::cast_possible_truncation
+    )]
     pub fn as_bytes(&self) -> [u8; 3] {
         [
             (self.red * 255.0) as u8,
@@ -28,10 +35,10 @@ impl Color {
 
     pub fn lerp_rgb(from: Self, to: Self, t: f32) -> Self {
         Self {
-            red: to.red.mul_add(t, from.red * (1.0 - t)),
-            blue: to.blue.mul_add(t, from.blue * (1.0 - t)),
-            green: to.green.mul_add(t, from.green * (1.0 - t)),
-            alpha: to.alpha.mul_add(t, from.alpha * (1.0 - t)),
+            red: lerp(from.red, to.red, t),
+            green: lerp(from.green, to.green, t),
+            blue: lerp(from.blue, to.blue, t),
+            alpha: lerp(from.alpha, to.alpha, t),
         }
     }
 }
