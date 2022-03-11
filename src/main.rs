@@ -38,34 +38,93 @@ mod common;
 mod framebuffer;
 
 use std::io::stdout;
+use std::time::{Duration, Instant};
 
 use color::Color;
 use framebuffer::{write, FrameBuffer};
 
 fn main() {
-    let mut frame = FrameBuffer::new(600, 480);
+    let mut frame = FrameBuffer::new(1440, 900);
     let mut out = stdout();
-    let mut time: f32 = 0.0;
+    let overall = Instant::now();
+    let mut period: Period = Period::new(State::First, overall.elapsed());
     loop {
-        {
-            //frame.fill(Color::new(0.5, 0.5, 0.5, 1.0));
-            let x = (time / 50.0)
-                .sin()
-                .mul_add((frame.width as f32) / 2.0, (frame.width as f32) / 2.0)
-                as u16;
-            let y = (time / 50.0)
-                .cos()
-                .mul_add((frame.height as f32) / 2.0, (frame.height as f32) / 2.0)
-                as u16;
-            for offset in 0..20 {
-                frame.pixel(
-                    x + offset - 10,
-                    y + offset - 10,
-                    Color::new(1.0, 1.0, 1.0, 1.0),
-                );
+        let time = overall.elapsed().as_secs_f32();
+        period = period.check(overall.elapsed());
+        match period.state {
+            State::First => {
+                //frame.fill(Color::new(0.5, 0.5, 0.5, 1.0));
+                let x = time
+                    .sin()
+                    .mul_add((frame.width as f32) / 2.0, (frame.width as f32) / 2.0)
+                    as u16;
+                let y = time
+                    .cos()
+                    .mul_add((frame.height as f32) / 2.0, (frame.height as f32) / 2.0)
+                    as u16;
+                for offset in 0..20 {
+                    frame.pixel(
+                        x + offset - 10,
+                        y + offset - 10,
+                        Color::new(1.0, 1.0, 1.0, 1.0),
+                    );
+                }
             }
+            State::Second => {}
         }
         write(&frame, &mut out);
-        time += 1.0;
+    }
+}
+
+struct Period {
+    state: State,
+    start_time: Duration,
+    duration: Duration,
+}
+
+impl Period {
+    pub fn new(state: State, start_time: Duration) -> Self {
+        match state {
+            State::First => Self {
+                state,
+                start_time,
+                duration: Duration::new(2, 0),
+            },
+            State::Second => Self {
+                state,
+                start_time,
+                duration: Duration::new(1, 0),
+            },
+        }
+    }
+
+    pub fn check(self, time: Duration) -> Self {
+        if time >= self.start_time + self.duration {
+            self.finish(time)
+        } else {
+            self
+        }
+    }
+
+    pub fn finish(self, time: Duration) -> Self {
+        match self.state {
+            State::First => Self::new(State::Second, time),
+            State::Second => Self::new(State::First, time),
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+enum State {
+    First,
+    Second,
+}
+
+impl State {
+    pub const fn next(&self) -> Self {
+        match *self {
+            Self::First => Self::Second,
+            Self::Second => Self::First,
+        }
     }
 }
