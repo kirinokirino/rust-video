@@ -1,79 +1,50 @@
-use crate::color::Color;
 use std::io::Write;
 
-pub trait PPM {
-    fn ppm_get_i(&self, i: usize) -> Color;
-    fn ppm_get(&self, x: u32, y: u32) -> Color;
-    fn ppm_set_i(&mut self, i: usize, c: Color);
-    fn ppm_set(&mut self, x: u32, y: u32, c: Color);
-    fn ppm_set_alpha(&mut self, x: u32, y: u32, c: Color, a: f32);
-}
-
-pub trait WritePPM {
-    fn ppm_write<P: Write>(&self, b: &mut P);
-}
-
-impl PPM for FrameBuffer {
-    fn ppm_get_i(&self, i: usize) -> Color {
-        if i * 3 + 2 > self.buf.len() {
-            return Color::new(1.0, 1.0, 1.0, 0.0);
-        }
-        let r = f32::from(self.buf[i * 3]) / 255.0;
-        let g = f32::from(self.buf[i * 3 + 1]) / 255.0;
-        let b = f32::from(self.buf[i * 3 + 2]) / 255.0;
-        Color::new(r, g, b, 1.0)
-    }
-
-    fn ppm_get(&self, x: u32, y: u32) -> Color {
-        if x >= self.w || y >= self.h {
-            return Color::new(1.0, 1.0, 1.0, 0.0);
-        }
-        self.ppm_get_i((y * self.w + x) as usize)
-    }
-
-    fn ppm_set_i(&mut self, i: usize, c: Color) {
-        if i * 3 + 2 > self.buf.len() {
-            return;
-        }
-        self.buf[i * 3] = (c.red * 255.0) as u8;
-        self.buf[i * 3 + 1] = (c.green * 255.0) as u8;
-        self.buf[i * 3 + 2] = (c.blue * 255.0) as u8;
-    }
-
-    fn ppm_set(&mut self, x: u32, y: u32, c: Color) {
-        if x >= self.w || y >= self.h {
-            return;
-        }
-        self.ppm_set_i((y * self.w + x) as usize, c);
-    }
-
-    fn ppm_set_alpha(&mut self, x: u32, y: u32, c: Color, a: f32) {
-        let bg = self.ppm_get(x, y);
-        self.ppm_set(x, y, Color::lerp_rgb(bg, c, a));
-    }
-}
-
-impl WritePPM for FrameBuffer {
-    fn ppm_write<P: Write>(&self, b: &mut P) {
-        writeln!(b, "P6\n{} {}\n255", self.w, self.h).unwrap();
-        let bytes: Vec<u8> = self.buf.iter().flat_map(|p| p.to_le_bytes()).collect();
-        b.write_all(&bytes).unwrap();
-        b.flush().unwrap();
-    }
-}
+use crate::color::Color;
+use crate::common::smoothstep;
 
 pub struct FrameBuffer {
-    pub w: u32,
-    pub h: u32,
-    buf: Vec<u8>,
+    pub width: u16,
+    pub height: u16,
+    buffer: Vec<Color>,
 }
 
 impl FrameBuffer {
-    pub fn new(w: u32, h: u32) -> Self {
+    pub fn new(width: u16, height: u16) -> Self {
         Self {
-            w,
-            h,
-            buf: vec![0; (w * h * 3) as usize],
+            width,
+            height,
+            buffer: vec![Color::new(0.0, 0.0, 0.0, 1.0); usize::from(width) * usize::from(height)],
         }
+    }
+
+    pub fn fill(&mut self, color: Color) {
+        self.buffer.fill(color);
+    }
+
+    pub fn pixel(&mut self, x: u16, y: u16, color: Color) {
+        if let Some(pixel) = self
+            .buffer
+            .get_mut(usize::from(y) * usize::from(self.width) + usize::from(x))
+        {
+            *pixel = color;
+        }
+    }
+
+    fn get(&self, x: u16, y: u16) -> Color {
+        self.buffer
+            .get(usize::from(y) * usize::from(self.width) + usize::from(x))
+            .copied()
+            .unwrap_or_default()
+    }
+
+    fn header(&self) -> String {
+        format!("P6\n{} {}\n255\n", self.width, self.height)
+    }
+    pub fn write<T: Write>(&self, to: &mut T) {
+        write!(to, "{}", self.header()).unwrap();
+        let bytes: Vec<u8> = self.buffer.iter().flat_map(Color::as_bytes).collect();
+        to.write_all(&bytes).unwrap();
+        to.flush().unwrap();
     }
 }

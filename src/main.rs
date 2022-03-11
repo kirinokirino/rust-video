@@ -34,46 +34,38 @@
 #![allow(clippy::cast_precision_loss, clippy::missing_panics_doc)]
 
 mod color;
+mod common;
 mod framebuffer;
-mod render;
 
 use std::io::stdout;
 
 use color::Color;
-use framebuffer::{FrameBuffer, WritePPM, PPM};
-use render::Renderable;
+use framebuffer::FrameBuffer;
 
 fn main() {
-    let mut frame = FrameBuffer::new(1440, 900);
+    let mut frame = FrameBuffer::new(600, 480);
     let mut out = stdout();
     let mut time: f32 = 0.0;
     loop {
         {
-            let w = frame.w;
-            let h = frame.h;
-            let hw = w as f32 / 2.0;
-            let hh = h as f32 / 2.0;
-
-            let frame = &mut frame as &mut dyn PPM;
-            frame.fill(w as usize, h as usize, Color::new(1.0, 1.0, 1.0, 1.0));
-            frame.dot(
-                (time / 50.0).sin().mul_add(hw, hw),
-                (time / 50.0).cos().mul_add(hh, hh),
-                Color::new(0.0, 0.0, 0.0, 1.0),
-                10.0,
-                Some(10.0),
-            );
-            let x = (time / 100.0).cos().mul_add(hw, hw);
-            let y = (time / 100.0).sin().mul_add(hh, hh);
-            frame.line(
-                x,
-                y,
-                w as f32 - x,
-                h as f32 - y,
-                Color::new(0.9, 0.15, 0.2, 1.0),
-            );
+            frame.fill(Color::new(0.5, 0.5, 0.5, 1.0));
+            let x = (time / 50.0)
+                .sin()
+                .mul_add((frame.width as f32) / 2.0, (frame.width as f32) / 2.0)
+                as u16;
+            let y = (time / 50.0)
+                .cos()
+                .mul_add((frame.height as f32) / 2.0, (frame.height as f32) / 2.0)
+                as u16;
+            for offset in 0..20 {
+                frame.pixel(
+                    x + offset - 10,
+                    y + offset - 10,
+                    Color::new(0.0, 0.0, 0.0, 1.0),
+                );
+            }
         }
-        frame.ppm_write(&mut out);
+        frame.write(&mut out);
         time += 1.0;
     }
 }
