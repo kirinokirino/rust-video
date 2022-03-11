@@ -36,15 +36,19 @@ impl FrameBuffer {
             .copied()
             .unwrap_or_default()
     }
+}
 
-    fn header(&self) -> String {
-        format!("P6\n{} {}\n255\n", self.width, self.height)
-    }
+fn header(framebuffer: &FrameBuffer) -> String {
+    format!("P6\n{} {}\n255\n", framebuffer.width, framebuffer.height)
+}
 
-    pub fn write<T: Write>(&self, to: &mut T) {
-        write!(to, "{}", self.header()).expect("I/O Error: Unable to write.");
-        let bytes: Vec<u8> = self.buffer.iter().flat_map(Color::as_bytes).collect();
-        to.write_all(&bytes).expect("I/O Error: Unable to write.");
-        to.flush().expect("I/O Error: Unable to flush.");
-    }
+pub fn write<T: Write>(framebuffer: &FrameBuffer, to: &mut T) {
+    write!(to, "{}", header(framebuffer)).expect("I/O Error: Unable to write.");
+    let bytes: Vec<u8> = framebuffer
+        .buffer
+        .iter()
+        .flat_map(Color::as_bytes)
+        .collect();
+    to.write_all(&bytes).expect("I/O Error: Unable to write.");
+    to.flush().expect("I/O Error: Unable to flush.");
 }

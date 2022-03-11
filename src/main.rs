@@ -40,7 +40,7 @@ mod framebuffer;
 use std::io::stdout;
 
 use color::Color;
-use framebuffer::FrameBuffer;
+use framebuffer::{write, FrameBuffer};
 
 fn main() {
     let mut frame = FrameBuffer::new(600, 480);
@@ -48,7 +48,7 @@ fn main() {
     let mut time: f32 = 0.0;
     loop {
         {
-            frame.fill(Color::new(0.5, 0.5, 0.5, 1.0));
+            //frame.fill(Color::new(0.5, 0.5, 0.5, 1.0));
             let x = (time / 50.0)
                 .sin()
                 .mul_add((frame.width as f32) / 2.0, (frame.width as f32) / 2.0)
@@ -61,11 +61,11 @@ fn main() {
                 frame.pixel(
                     x + offset - 10,
                     y + offset - 10,
-                    Color::new(0.0, 0.0, 0.0, 1.0),
+                    Color::new(1.0, 1.0, 1.0, 1.0),
                 );
             }
         }
-        frame.write(&mut out);
+        write(&frame, &mut out);
         time += 1.0;
     }
 }
